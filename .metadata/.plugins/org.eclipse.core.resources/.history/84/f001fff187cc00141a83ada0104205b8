@@ -1,0 +1,15 @@
+package hmm;
+
+public class DataSorter {
+	String file;
+	
+	public void DataReader(){
+		try (BufferedReader br = new BufferedReader(new FileReader(file))) {
+		    String line;
+		    while ((line = br.readLine()) != null) {
+		       // process the line.
+		    }
+		}
+	}
+	
+}
