@@ -8,8 +8,10 @@ import java.util.Map;
 
 public class DataSorter {
 	String file;
-	Map<Character, Integer> graph_to_num = new HashMap<Character, Integer>();
-	Map<String, Integer> phone_to_num = new HashMap<String, Integer>();
+	Map<Character, Integer> tr_graph_to_num = new HashMap<Character, Integer>();
+	Map<String, Integer> tr_phone_to_num = new HashMap<String, Integer>();
+	Map<Character, Integer> ts_graph_to_num = new HashMap<Character, Integer>();
+	Map<String, Integer> ts_phone_to_num = new HashMap<String, Integer>();
 	int count_graph = 0;
 	int count_phone = 0;
 	ArrayList<ArrayList<Integer>> emission_count = new ArrayList<ArrayList<Integer>>();
@@ -29,10 +31,15 @@ public class DataSorter {
 		file = filename;
 	}
 	public void dataReader(){
-		try (BufferedReader br = new BufferedReader(new FileReader(file))) {
+		try {
+			BufferedReader br = new BufferedReader(new FileReader(file)); 
 		    String line;
 		    String mod_line;
+		    int line_num=0;
+		    int count_ts_graph=0;
+		    int count_ts_phone=0;
 		    while ((line = br.readLine()) != null) {
+		    	line_num++;
 		    	mod_line="";
 		    	for(int i=0;i<line.length();i++){
 		    		if(Character.isLetter(line.charAt(i))||line.charAt(i)==' '||Character.isDigit(line.charAt(i))){
@@ -47,22 +54,35 @@ public class DataSorter {
 		    		//System.out.println(temp[0]);
 		    		//System.out.println(count_phone);
 		    		//System.out.println(count_graph);
+		    		if(line_num%5==0){
+		    			for(int i=0; i<temp[0].length(); i++){
+		    				ts_graph_to_num.put(temp[0].charAt(i), count_ts_graph);
+		    				ts_phone_to_num.put(temp[i+1], count_ts_phone);
+		    				count_ts_graph++;
+		    				count_ts_phone++;
+		    			}
+		    			ts_graph_to_num.put('#', count_ts_graph);
+	    				ts_phone_to_num.put("#", count_ts_phone);
+	    				count_ts_graph++;
+	    				count_ts_phone++;
+	    				continue;
+		    		}
 		    		for(int i=0; i<temp[0].length(); i++)
 		    		{
-		    			if(!graph_to_num.containsKey(temp[0].charAt(i)))
+		    			if(!tr_graph_to_num.containsKey(temp[0].charAt(i)))
 		    			{
-		    				graph_to_num.put(temp[0].charAt(i), count_graph);
+		    				tr_graph_to_num.put(temp[0].charAt(i), count_graph);
 		    				for(int j=0; j<count_phone; j++)
 		    				{	
 		    					(emission_count.get(j)).add(0); 
 		    				}
 		    				count_graph++;
 		    			}
-		    			int graph_index = graph_to_num.get(temp[0].charAt(i));
-		    			if(!phone_to_num.containsKey(temp[i+1]))
+		    			int graph_index = tr_graph_to_num.get(temp[0].charAt(i));
+		    			if(!tr_phone_to_num.containsKey(temp[i+1]))
 		    			{
 		    				System.out.println(temp[i+1]);
-		    				phone_to_num.put(temp[i+1], count_phone);
+		    				tr_phone_to_num.put(temp[i+1], count_phone);
 		    				emission_count.add(new ArrayList<Integer>());
 		    				transition_count.add(new ArrayList<Integer>());
 		    				start_count.add(0);
@@ -84,7 +104,7 @@ public class DataSorter {
 		    				}
 		    				
 		    			}
-		    			int phone_index = phone_to_num.get(temp[i+1]);	
+		    			int phone_index = tr_phone_to_num.get(temp[i+1]);	
 		    		
 		    			emission_count.get(phone_index).set(graph_index, emission_count.get(phone_index).get(graph_index)+1); 
 
@@ -155,7 +175,7 @@ public class DataSorter {
 		System.out.println();
 	}
 	 
-	public void Viterbi(char[] y){
+	public void Viterbi(Character[] y){
 		V = new float[y.length][count_phone];
 		x = new int[y.length];
 		ptr = new int[y.length][count_phone];
@@ -164,7 +184,7 @@ public class DataSorter {
 			ptr[0][i]=i;
 		
 		for(int j=0; j<count_phone; j++){
-			V[0][j] = emission_prob[j][graph_to_num.get(y[0])]*start_prob[j];
+			V[0][j] = emission_prob[j][tr_graph_to_num.get(y[0])]*start_prob[j];
 			System.out.print(V[0][j]+" ");
 		}
 		System.out.println();
@@ -175,7 +195,7 @@ public class DataSorter {
 				float temp=0;
 				int index=0;
 				for(int k=0; k<count_phone; k++){
-					temp = emission_prob[j][graph_to_num.get(y[i])]*transition_prob[k][j]*V[i-1][k];
+					temp = emission_prob[j][tr_graph_to_num.get(y[i])]*transition_prob[k][j]*V[i-1][k];
 					//System.out.print(temp);
 					if(temp>high){
 						high=temp;
@@ -207,7 +227,7 @@ public class DataSorter {
 			x[i]=ptr[i+1][x[i+1]];
 		
 		for(int i=0; i<x.length; i++)
-			for (Map.Entry<String, Integer> entry : phone_to_num.entrySet()) {
+			for (Map.Entry<String, Integer> entry : tr_phone_to_num.entrySet()) {
 		        if ((new Integer(x[i])).equals(entry.getValue())) {
 		        	System.out.println(entry.getKey());//phone_to_num.g(x[i]);
 		        }
