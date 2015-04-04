@@ -10,8 +10,8 @@ public class DataSorter {
 	String file;
 	Map<Character, Integer> tr_graph_to_num = new HashMap<Character, Integer>();
 	Map<String, Integer> tr_phone_to_num = new HashMap<String, Integer>();
-	Map<Character, Integer> ts_graph_to_num = new HashMap<Character, Integer>();
-	Map<String, Integer> ts_phone_to_num = new HashMap<String, Integer>();
+	Map<Integer, Character> ts_graph_to_num = new HashMap<Integer, Character>();
+	Map<Integer, String> ts_phone_to_num = new HashMap<Integer, String>();
 	int count_graph = 0;
 	int count_phone = 0;
 	ArrayList<ArrayList<Integer>> emission_count = new ArrayList<ArrayList<Integer>>();
@@ -54,15 +54,16 @@ public class DataSorter {
 		    		//System.out.println(temp[0]);
 		    		//System.out.println(count_phone);
 		    		//System.out.println(count_graph);
-		    		if(line_num%5==0){
+		    		if(line_num%5==2){
+		    			
 		    			for(int i=0; i<temp[0].length(); i++){
-		    				ts_graph_to_num.put(temp[0].charAt(i), count_ts_graph);
-		    				ts_phone_to_num.put(temp[i+1], count_ts_phone);
+		    				ts_graph_to_num.put(count_ts_graph, temp[0].charAt(i));
+		    				ts_phone_to_num.put(count_ts_phone, temp[i+1]);
 		    				count_ts_graph++;
 		    				count_ts_phone++;
 		    			}
-		    			ts_graph_to_num.put('#', count_ts_graph);
-	    				ts_phone_to_num.put("#", count_ts_phone);
+		    			ts_graph_to_num.put(count_ts_graph, '#');
+	    				ts_phone_to_num.put(count_ts_phone, "#");
 	    				count_ts_graph++;
 	    				count_ts_phone++;
 	    				continue;
@@ -170,24 +171,24 @@ public class DataSorter {
 //			System.out.println();
 //		}
 		for(int i=0; i<count_phone; i++){
-			System.out.print(start_prob[i]+"  ");
+//			System.out.print(start_prob[i]+"  ");
 		}
-		System.out.println();
+//		System.out.println();
 	}
 	 
-	public void Viterbi(Character[] y){
+	public boolean Viterbi(Character[] y, Integer startIndex, Integer length){
+//		System.out.println('#'+y.toString());
 		V = new float[y.length][count_phone];
 		x = new int[y.length];
 		ptr = new int[y.length][count_phone];
-		
 		for(int i=0; i<count_phone; i++)
 			ptr[0][i]=i;
 		
 		for(int j=0; j<count_phone; j++){
 			V[0][j] = emission_prob[j][tr_graph_to_num.get(y[0])]*start_prob[j];
-			System.out.print(V[0][j]+" ");
+//			System.out.print(V[0][j]+" ");
 		}
-		System.out.println();
+//		System.out.println();
 		
 		for(int i=1; i<y.length; i++){
 			for(int j=0; j<count_phone; j++){
@@ -203,10 +204,10 @@ public class DataSorter {
 					}
 				}
 				V[i][j]=high;
-				System.out.print(V[i][j]+" ");
+//				System.out.print(V[i][j]+" ");
 				ptr[i][j]=index;
 			}
-			System.out.println();
+//			System.out.println();
 		}
 		
 		
@@ -225,12 +226,17 @@ public class DataSorter {
 		
 		for(int i=y.length-2; i>=0; i--)
 			x[i]=ptr[i+1][x[i+1]];
-		
-		for(int i=0; i<x.length; i++)
+		boolean same=true;
+		for(int i=0; i<x.length; i++){
 			for (Map.Entry<String, Integer> entry : tr_phone_to_num.entrySet()) {
 		        if ((new Integer(x[i])).equals(entry.getValue())) {
-		        	System.out.println(entry.getKey());//phone_to_num.g(x[i]);
+		        	if(!entry.getKey().equals(ts_phone_to_num.get(startIndex+i))){
+		        		same=false;//phone_to_num.g(x[i]);
+		        		return same;
+		        	}
 		        }
 			}
+		}
+		return same;
 	}
 }
